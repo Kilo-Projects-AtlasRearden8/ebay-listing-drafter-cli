@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ebay-listing-drafter"
+version = "0.1.0"
+description = "Local-first CLI that drafts eBay listing titles and descriptions from item details using a configurable OpenAI-compatible endpoint (default Ollama), with profit-estimate notes."
+requires-python = ">=3.9"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [{name = "Asdale Dynamics, LLC"}]
+keywords = ["ebay", "listing", "drafting", "ollama", "llm", "local-first", "reselling"]
+
+[project.scripts]
+ebay-draft = "ebay_listing_drafter.cli:main"
+
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
