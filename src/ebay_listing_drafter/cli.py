@@ -10,7 +10,7 @@ from typing import Any
 
 from .client import ChatClient, ChatMessage, LLMError
 from .config import Config, CONFIG_FILE
-from .draft import draft_messages
+from .draft import draft_messages, parse_draft_output
 from .exporter import export_listing
 from .profit import calculate
 
@@ -103,9 +103,7 @@ def cmd_draft(args: argparse.Namespace) -> int:
             print(f"Error: {exc}", file=sys.stderr)
             print("Tip: run with --no-llm to draft a template without calling the model.", file=sys.stderr)
             return 1
-        parts = response.content.strip().split("\n\n", 1)
-        title = parts[0].strip().strip('"') if parts else ""
-        description = parts[1].strip() if len(parts) > 1 else response.content.strip()
+        title, description = parse_draft_output(response.content)
         if profit_notes and profit_notes not in description:
             description += "\n\n" + profit_notes
 

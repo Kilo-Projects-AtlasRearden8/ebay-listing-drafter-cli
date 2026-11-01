@@ -1,2 +1,0 @@
-[console_scripts]
-ebay-draft = ebay_listing_drafter.cli:main

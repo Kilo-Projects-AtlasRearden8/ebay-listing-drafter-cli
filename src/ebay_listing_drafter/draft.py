@@ -15,6 +15,7 @@ def item_summary(details: dict) -> str:
 
 
 def title_prompt(details: dict) -> str:
+    """Build a prompt asking for a title only (kept as a helper)."""
     return f"""Write one eBay listing title (max 80 characters) for the item below.
 Include brand, model, size, condition, and key specifics if known.
 Return only the title, nothing else.
@@ -24,6 +25,7 @@ Item details:
 
 
 def description_prompt(details: dict, profit_notes: str | None = None) -> str:
+    """Build a prompt asking for a description only (kept as a helper)."""
     extra = ""
     if profit_notes:
         extra = f"\n\nAdd this profit-estimate section at the end, exactly as given:\n{profit_notes}"
@@ -36,9 +38,62 @@ Item details:
 {item_summary(details)}"""
 
 
+def draft_prompt(details: dict, profit_notes: str | None = None) -> str:
+    """Build a single user prompt asking for both a title and a description."""
+    extra = ""
+    if profit_notes:
+        extra = f"\n\nEnd the description with this profit-estimate section, exactly as given:\n{profit_notes}"
+    return f"""Write an eBay listing for the item below. Reply with exactly two labeled sections:
+
+TITLE: one title, 80 characters or fewer, including brand, model, size, condition, and key specifics if known.
+
+DESCRIPTION: short paragraphs in simple language, bullet points for item specifics and shipping, honest about condition and any unknowns, then a short friendly "About the seller" section.{extra}
+
+Item details:
+{item_summary(details)}"""
+
+
 def draft_messages(details: dict, profit_notes: str | None = None) -> list[dict]:
+    """Build the chat messages for a single drafting call."""
     return [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": title_prompt(details)},
-        {"role": "user", "content": description_prompt(details, profit_notes)},
+        {"role": "user", "content": draft_prompt(details, profit_notes)},
     ]
+
+
+def parse_draft_output(text: str) -> tuple[str, str]:
+    """Split an LLM response into (title, description) using TITLE:/DESCRIPTION: markers.
+
+    Falls back gracefully if the markers are missing or malformed.
+    """
+    text = text.strip()
+    title = ""
+    description = text
+
+    upper = text.upper()
+    title_idx = upper.find("TITLE:")
+    desc_idx = upper.find("DESCRIPTION:")
+
+    if title_idx != -1:
+        start = title_idx + len("TITLE:")
+        end = desc_idx if desc_idx != -1 and desc_idx > title_idx else len(text)
+        title = text[start:end].strip().strip('"').strip()
+
+    if desc_idx != -1:
+        description = text[desc_idx + len("DESCRIPTION:"):].strip().strip('"').strip()
+
+    # Fallback: if no markers found, treat first line as title, rest as description.
+    if not title and text:
+        first_newline = text.find("\n")
+        if first_newline != -1:
+            title = text[:first_newline].strip().strip('"').strip()
+            description = text[first_newline:].strip()
+        else:
+            title = text.strip().strip('"').strip()
+            description = ""
+
+    # Cap the title at 80 characters.
+    if len(title) > 80:
+        title = title[:77].rstrip() + "..."
+
+    return title, description

@@ -11,7 +11,7 @@ from unittest.mock import patch, MagicMock
 
 from ebay_listing_drafter.client import ChatClient, LLMError, ChatMessage
 from ebay_listing_drafter.config import Config, CONFIG_FILE, DEFAULT_BASE_URL, DEFAULT_MODEL
-from ebay_listing_drafter.draft import draft_messages, title_prompt, description_prompt
+from ebay_listing_drafter.draft import draft_messages, parse_draft_output, title_prompt, description_prompt
 from ebay_listing_drafter.exporter import export_listing
 from ebay_listing_drafter.profit import calculate, estimate_fees, break_even_price, suggested_sale_price
 
